@@ -31,7 +31,7 @@ Follow these steps to configure the local environment.
 First, clone the repository to your local machine and navigate into the project directory:
 
 ```bash
-git clone <your-repository-url-here>
+git clone https://github.com/GreenXDShadow/ReelTalk
 cd ReelTalk
 ```
 
