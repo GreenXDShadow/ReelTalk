@@ -1,6 +1,7 @@
 // src/App.jsx
 import './App.css';
 import MovieList from './components/MovieList';
+import UserList from './components/UserList';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <h1>React + Flask CRUD</h1>
       <div className="card">
         <MovieList />
+        <UserList />
       </div>
     </>
   );
