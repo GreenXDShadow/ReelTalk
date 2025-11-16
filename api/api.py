@@ -71,7 +71,6 @@ def add_movie():
 @app.route('/api/movies', methods=['GET'])
 def get_movies():
     movies = Movie.query.all()
-    print(f"Found {len(users)} users")
     return jsonify([movie.to_dict() for movie in movies])
 
 
