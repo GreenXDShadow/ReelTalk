@@ -49,3 +49,36 @@ export const deleteMovie = async (id) => {
   }
   return response.json();
 };
+
+//read/create/update/delete for users
+
+export const getUsers = async () => {
+  const response = await fetch(`${BASE_URL}/users`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch users');
+  }
+  return response.json();
+};
+
+export const createUser = async (userData) => {
+  const response = await fetch(`${BASE_URL}/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to create user');
+  }
+
+  return response.json();
+};
+
+
+export const updateUser = async(id) => {
+
+}
+
+export const deleteUser = async(id) => {
+
+}

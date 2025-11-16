@@ -117,6 +117,61 @@ def delete_movie(id):
 
 # Note: You would continue this pattern to create CRUD endpoints for Users, Comments, Ratings, and Transactions.
 
+# --- User CRUD Endpoints ---
+
+# [CREATE] Add a new user
+@app.route('/api/users', methods=['POST'])
+def add_user():
+    data = request.get_json()
+    if not data.get('username'):
+        return jsonify({"error": "Username is required"}), 400
+
+    new_user = User(
+        username=data['username'],
+        image_link=data.get('image_link'),
+        date_account_created=datetime.strptime(data['date_account_created'], '%Y-%m-%d') if data.get('date_account_created') else datetime.utcnow()
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify(new_user.to_dict()), 201
+
+
+# [READ] Get all users
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    users = User.query.all()
+    return jsonify([user.to_dict() for user in users])
+
+
+# [UPDATE] Update an existing user
+@app.route('/api/users/<int:id>', methods=['PUT'])
+def update_user(id):
+    user = User.query.get_or_404(id)
+    data = request.get_json()
+
+    if 'username' in data:
+        user.username = data['username']
+    if 'image_link' in data:
+        user.image_link = data['image_link']
+    if 'date_account_created' in data:
+        try:
+            user.date_account_created = datetime.strptime(data['date_account_created'], '%Y-%m-%d')
+        except ValueError:
+            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+
+    db.session.commit()
+    return jsonify(user.to_dict())
+
+
+# [DELETE] Delete a user
+@app.route('/api/users/<int:id>', methods=['DELETE'])
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': 'User deleted successfully'}), 200
+
+
 # Helper
 # This command is needed to run 'flask db' commands
 @app.shell_context_processor
