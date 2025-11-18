@@ -70,7 +70,7 @@ def add_movie():
 # [READ] Get all movies
 @app.route('/api/movies', methods=['GET'])
 def get_movies():
-    movies = Movie.query.all()
+    movies = Movie.query.all() 
     return jsonify([movie.to_dict() for movie in movies])
 
 

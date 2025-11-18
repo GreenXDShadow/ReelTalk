@@ -75,10 +75,31 @@ export const createUser = async (userData) => {
 };
 
 
-export const updateUser = async(id) => {
+export const updateUser = async (id, userData) => {
+  const response = await fetch(`${BASE_URL}/users/${id}`, {
+    method: 'PUT',
+    headers: { 
+      'Content-Type': 'application/json' 
+    },
+    body: JSON.stringify(userData),
+  });
 
-}
+  if (!response.ok) {
+    throw new Error('Failed to update user');
+  }
+
+  return response.json();
+};
+
 
 export const deleteUser = async(id) => {
+  
+  const response = await fetch(`${BASE_URL}/users/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    throw new Error('Failed to delete user');
+  }
+  return response.json();
 
 }
