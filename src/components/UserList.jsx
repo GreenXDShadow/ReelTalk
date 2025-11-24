@@ -6,7 +6,6 @@ import EditUserForm from "./EditUserForm"; // NEW: separate edit form
 
 function UserList() {
   const [users, setUsers] = useState([]); //stores list of users
-  //const [editingUser, setEditingUser] = useState(null); //stores current user we're editing //ill do it later
   const [editingUser, setEditingUser] = useState(null); //stores current user we're editing (now implemented)
   const [error, setError] = useState(""); //any errors go here
 
@@ -58,7 +57,6 @@ function UserList() {
 
       {/* actual creation form will go here */}
       <UserForm onSuccess={fetchUsers /* on success, getUsers */} /> 
-
       {editingUser && (
         <EditUserForm
           user={editingUser}
