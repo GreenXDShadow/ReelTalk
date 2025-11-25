@@ -9,6 +9,16 @@ export const getMovies = async () => {
   return response.json();
 };
 
+// [READ+] Get all movie ids & movie titles
+export const getMovieList = async () => {
+  const response = await fetch(`${BASE_URL}/movies/minimal`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch movie list');
+  }
+  return response.json();
+};
+
+
 // [CREATE] Add a new movie
 export const createMovie = async (movieData) => {
   const response = await fetch(`${BASE_URL}/movies`, {

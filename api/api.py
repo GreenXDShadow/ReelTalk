@@ -80,6 +80,14 @@ def get_movie(id):
     movie = Movie.query.get_or_404(id)
     return jsonify(movie.to_dict())
 
+# [READ] Select movie IDs and titles 
+@app.route('/api/movies/minimal', methods=['GET'])
+def get_movie_minimal():
+    movies = Movie.query.with_entities(Movie.id, Movie.title).all()
+    
+    movie_list = [{"id": m.id, "title": m.title} for m in movies]
+    return jsonify(movie_list)
+
 
 # [UPDATE] Update an existing movie
 @app.route('/api/movies/<int:id>', methods=['PUT'])
@@ -227,7 +235,6 @@ def update_comment(id):
 
     db.session.commit()
     return jsonify(comment.to_dict())
-
 
 # [DELETE] Delete a comment
 @app.route('/api/comments/<int:id>', methods=['DELETE'])
