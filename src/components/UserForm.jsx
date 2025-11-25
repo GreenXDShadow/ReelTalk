@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 
 function UserForm({ onSuccess }) {
   const [formData, setFormData] = useState({ //form to submit 
-    id: "",
     username: "",
     date_account_created: "",
     image_link: "",
@@ -14,6 +13,7 @@ function UserForm({ onSuccess }) {
   };
 
   const handleSubmit = async (e) => { //onsubmit
+    
     e.preventDefault();
 
     try {
@@ -21,7 +21,6 @@ function UserForm({ onSuccess }) {
       await api.createUser(formData); // call createuser function in api.py
       onSuccess();  //if it works
       setFormData({ //then reset form
-        id: "",
         username: "",
         date_account_created: "",
         image_link: "",
