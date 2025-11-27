@@ -1,0 +1,25 @@
+.SignUpForm {
+
+    width: 75%;
+    height: 400px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15%;
+    border: 1px solid white;
+    background-color: rgb(41, 39, 37);
+
+}
+
+.SignUpFormInput {
+
+    width: 125px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5%;
+    border: 1px solid white;
+
+}

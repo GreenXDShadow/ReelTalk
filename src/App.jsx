@@ -1,27 +1,21 @@
 // src/App.jsx
 import './App.css';
-import MovieList from './components/MovieList';
-import UserList from './components/UserList';
-import CommentList from './components/CommentList';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import MovieCatalog from "./pages/MovieCatalog"; 
+import MoviePage from "./pages/MoviePage";
+import UserCatalog from "./pages/UserCatalog";
 
 function App() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank" rel="noreferrer">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noreferrer">
-          <img src="/react.svg" className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>React + Flask CRUD</h1>
-      <div className="card">
-        <MovieList />
-        <UserList />
-        <CommentList />
-      </div>
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/moviecatalog" element={<MovieCatalog />} /> 
+        <Route path="/movie/:id" element={<MoviePage />} />
+        <Route path="/usercatalog" element={<UserCatalog />} />
+      </Routes>
+    </Router>
   );
 }
 

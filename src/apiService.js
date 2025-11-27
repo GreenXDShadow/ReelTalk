@@ -18,6 +18,16 @@ export const getMovieList = async () => {
   return response.json();
 };
 
+// [READ+] Fetch movie by id
+export const getMovieById = async (id) => {
+  const response = await fetch(`${BASE_URL}/movies/${id}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch movie with id ${id}`);
+  }
+  return response.json();
+};
+
+
 
 // [CREATE] Add a new movie
 export const createMovie = async (movieData) => {
