@@ -66,7 +66,7 @@ function UserList() {
       )}
 
       <h3>Available Users</h3>
-      <ul style={{ listStyle: "none", padding: 0 }}>
+      <ul style={{ listStyle: "none", padding: 0, width: "600px" }}>
         {users.map(
           (
             user //make a div for each user

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { getMovies, deleteMovie } from '../apiService';
 import MovieForm from './MovieForm';
+import { useNavigate } from "react-router-dom";
 
 function MovieList() {
   const [movies, setMovies] = useState([]);
@@ -43,6 +44,8 @@ function MovieList() {
     fetchMovies(); // Refresh the list
   };
 
+  const navigate = useNavigate();
+
   return (
     <div>
       <h2>Movie Management</h2>
@@ -60,11 +63,16 @@ function MovieList() {
         {movies.map((movie) => (
           <li key={movie.id} style={{ border: '1px solid #ccc', margin: '10px', padding: '10px' }}>
             <img src={movie.image_link || 'https://via.placeholder.com/100x150'} alt={movie.title} style={{width: '100px', float: 'left', marginRight: '10px'}} />
-            <h4>{movie.title}</h4>
-            <p>{movie.description}</p>
-            <p><strong>Rent:</strong> ${movie.rental_price} | <strong>Buy:</strong> ${movie.purchase_price}</p>
-            <button onClick={() => handleEdit(movie)}>Edit</button>
-            <button onClick={() => handleDelete(movie.id)} style={{ marginLeft: '10px' }}>Delete</button>
+            <div style={{minWidth: "200px"}}>
+              <h4>{movie.title}</h4>
+              <p>{movie.description}</p>
+              <p><strong>Rent:</strong> ${movie.rental_price} | <strong>Buy:</strong> ${movie.purchase_price}</p>
+            </div>
+            <div style={{minWidth: "200px",  display: "flex", justifyContent: "center"}}>
+              <button onClick={() => handleEdit(movie)}>Edit</button>
+              <button onClick={() => handleDelete(movie.id)} style={{ marginLeft: '10px', marginRight: '10px'}}>Delete</button>
+              <button onClick={() => navigate(`/movie/${movie.id}`)}>See Info</button>
+            </div>
           </li>
         ))}
       </ul>

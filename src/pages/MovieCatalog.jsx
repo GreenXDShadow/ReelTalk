@@ -1,7 +1,7 @@
 import NavBar from "../components/Navbar";
 import MovieList from '../components/MovieList';
 
-export default function Home() {
+export default function MovieCatalog() {
   return (
     <>
       <NavBar />

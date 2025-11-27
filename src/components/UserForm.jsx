@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import "./UserForm.css"; 
 
 function UserForm({ onSuccess }) {
   const [formData, setFormData] = useState({ //form to submit 
@@ -31,33 +32,41 @@ function UserForm({ onSuccess }) {
   };
 
   return (
+    <div className="SignUpForm">
     <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-      <h3>Add new user</h3>
+      <h2>Sign up today!</h2>
       <input
         type="text"
         name="username"
-        placeholder="username"
+        placeholder="Username"
         value={formData.username}
         onChange={handleChange}
         required
+        className="SignUpFormInput"
       />
+      <br/>
       <input
         type="date"
         name="date_account_created"
         value={formData.date_account_created}
         onChange={handleChange}
         required
+        className="SignUpFormInput"
       />
+      <br/>
       <input
         type="text"
         name="image_link"
-        placeholder="pfp link"
+        placeholder="Upload image"
         value={formData.image_link}
         onChange={handleChange}
         required
+        className="SignUpFormInput"
       />
+      <br/>
       <button type="submit">create</button>
     </form>
+    </div>
   );
 }
 
