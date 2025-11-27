@@ -1,31 +1,100 @@
 # api/api.py
 
 import time
+import click
 from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
+from flask_login import login_user, logout_user, login_required, current_user
 from datetime import datetime
+from extensions import db, bcrypt, login_manager
+from models import User, Movie, Transaction, Rating, Comment
 import os
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+# IMPORTANT: Set a secret key for session management!
+# IN prod you'd NEVER do this but for the sake of the assignment and me being lazy ill leave it here
+app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'
 
-# --- Database Configuration ---
-# Get the absolute path of the directory where this file is
+# Database Config
 basedir = os.path.abspath(os.path.dirname(__file__))
-# Set the database URI. We are using SQLite, and the file will be app.db
-# in the same directory as this script (the 'api' directory)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize the database and migration engine
-db = SQLAlchemy(app)
+CORS(app)
+
+# Initialize Extensions
+db.init_app(app)
+bcrypt.init_app(app)
+login_manager.init_app(app)
 migrate = Migrate(app, db)
 
-# Import models *after* 'db' is defined so models.py can use it
-from models import User, Movie, Transaction, Rating, Comment
 
+# --- CLI COMMANDS (Administrative Way to Create/Delete Users) ---
+
+@app.cli.command("create-user")
+@click.argument("username")
+@click.argument("password")
+def create_user(username, password):
+    """Create a new user: flask create-user <username> <password>"""
+    if User.query.filter_by(username=username).first():
+        print(f"Error: User '{username}' already exists.")
+        return
+
+    # The model's @password.setter handles the hashing automatically!
+    new_user = User(username=username, password=password)
+    db.session.add(new_user)
+    db.session.commit()
+    print(f"User '{username}' created successfully.")
+
+
+@app.cli.command("delete-user")
+@click.argument("username")
+def delete_user(username):
+    """Delete a user: flask delete-user <username>"""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        print(f"Error: User '{username}' not found.")
+        return
+
+    db.session.delete(user)
+    db.session.commit()
+    print(f"User '{username}' deleted.")
+
+
+# --- Auth Routes ---
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    user = User.query.filter_by(username=username).first()
+
+    if user and user.verify_password(password):
+        login_user(user)
+        return jsonify({"message": "Logged in successfully", "user": user.to_dict()}), 200
+
+    return jsonify({"error": "Invalid username or password"}), 401
+
+
+@app.route('/api/logout', methods=['POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message": "Logged out successfully"}), 200
+
+# Example of how to protect a route if we want to restrict pages to only logged in users
+# @app.route('/api/protected-route')
+# @login_required
+# def protected():
+#     return jsonify({"secret": "data"})
+
+# --- Existing Routes ---
+# (Keep your existing movie/transaction routes here,
+#  but make sure to remove the old '/api/users' Create route
+#  or update it to handle passwords if you want public signups)
 
 # --- API Routes ---
 
@@ -128,16 +197,21 @@ def delete_movie(id):
 # --- User CRUD Endpoints ---
 
 # [CREATE] Add a new user
+# Updated User Create Route (Public Signup)
 @app.route('/api/users', methods=['POST'])
 def add_user():
     data = request.get_json()
-    if not data.get('username'):
-        return jsonify({"error": "Username is required"}), 400
+    if not data.get('username') or not data.get('password'):
+        return jsonify({"error": "Username and password required"}), 400
+
+    if User.query.filter_by(username=data['username']).first():
+        return jsonify({"error": "Username already exists"}), 400
 
     new_user = User(
         username=data['username'],
+        password=data['password'], # This triggers the hashing
         image_link=data.get('image_link'),
-        date_account_created=datetime.strptime(data['date_account_created'], '%Y-%m-%d') if data.get('date_account_created') else datetime.utcnow()
+        date_account_created=datetime.utcnow()
     )
     db.session.add(new_user)
     db.session.commit()
