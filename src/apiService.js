@@ -1,5 +1,30 @@
 const BASE_URL = '/api'; // Uses the Vite proxy
 
+// Auth Endpoints
+
+export const loginUser = async (credentials) => {
+  const response = await fetch(`${BASE_URL}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials),
+  });
+
+  if (!response.ok) {
+    throw new Error('Login failed');
+  }
+  return response.json();
+};
+
+export const logoutUser = async () => {
+  const response = await fetch(`${BASE_URL}/logout`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error('Logout failed');
+  }
+  return response.json();
+};
+
 // [READ] Fetch all movies
 export const getMovies = async () => {
   const response = await fetch(`${BASE_URL}/movies`);
