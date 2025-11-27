@@ -2,6 +2,7 @@
 import './App.css';
 import MovieList from './components/MovieList';
 import UserList from './components/UserList';
+import CommentList from './components/CommentList';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <div className="card">
         <MovieList />
         <UserList />
+        <CommentList />
       </div>
     </>
   );

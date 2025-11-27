@@ -70,7 +70,7 @@ def add_movie():
 # [READ] Get all movies
 @app.route('/api/movies', methods=['GET'])
 def get_movies():
-    movies = Movie.query.all()
+    movies = Movie.query.all() 
     return jsonify([movie.to_dict() for movie in movies])
 
 
@@ -79,6 +79,14 @@ def get_movies():
 def get_movie(id):
     movie = Movie.query.get_or_404(id)
     return jsonify(movie.to_dict())
+
+# [READ] Select movie IDs and titles 
+@app.route('/api/movies/minimal', methods=['GET'])
+def get_movie_minimal():
+    movies = Movie.query.with_entities(Movie.id, Movie.title).all()
+    
+    movie_list = [{"id": m.id, "title": m.title} for m in movies]
+    return jsonify(movie_list)
 
 
 # [UPDATE] Update an existing movie
@@ -170,6 +178,72 @@ def delete_user(id):
     db.session.delete(user)
     db.session.commit()
     return jsonify({'message': 'User deleted successfully'}), 200
+
+
+# --- Comment CRUD Endpoints ---
+
+# [CREATE] Add a new comment
+@app.route('/api/comments', methods=['POST'])
+def add_comment():
+    data = request.get_json()
+    
+    if not data.get('movie_id') or not data.get('user_id') or not data.get('comment_content'):
+        return jsonify({"error": "movie_id, user_id, & comment_content are required"}), 400
+
+    new_comment = Comment(
+        movie_id=data['movie_id'],
+        user_id=data['user_id'],
+        comment_content=data['comment_content'],
+        date_created=datetime.strptime(data['date_created'], '%Y-%m-%d %H:%M:%S') if data.get('date_created') else datetime.utcnow()
+    )
+    db.session.add(new_comment)
+    db.session.commit()
+    return jsonify(new_comment.to_dict()), 201
+
+
+# [READ] Get all comments
+@app.route('/api/comments', methods=['GET'])
+def get_comments():
+    comments = Comment.query.all()
+    return jsonify([comment.to_dict() for comment in comments])
+
+
+# [READ] Get a single comment by ID
+@app.route('/api/comments/<int:id>', methods=['GET'])
+def get_comment(id):
+    comment = Comment.query.get_or_404(id)
+    return jsonify(comment.to_dict())
+
+
+# [UPDATE] Update an existing comment
+@app.route('/api/comments/<int:id>', methods=['PUT'])
+def update_comment(id):
+    comment = Comment.query.get_or_404(id)
+    data = request.get_json()
+
+    if 'movie_id' in data:
+        comment.movie_id = data['movie_id']
+    if 'user_id' in data:
+        comment.user_id = data['user_id']
+    if 'comment_content' in data:
+        comment.comment_content = data['comment_content']
+    if 'date_created' in data:
+        try:
+            comment.date_created = datetime.strptime(data['date_created'], '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD HH:MM:SS"}), 400
+
+    db.session.commit()
+    return jsonify(comment.to_dict())
+
+# [DELETE] Delete a comment
+@app.route('/api/comments/<int:id>', methods=['DELETE'])
+def delete_comment(id):
+    comment = Comment.query.get_or_404(id)
+    db.session.delete(comment)
+    db.session.commit()
+    return jsonify({'message': 'Comment deleted successfully'}), 200
+
 
 
 # Helper
