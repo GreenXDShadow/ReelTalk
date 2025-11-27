@@ -1,26 +1,48 @@
 # api/models.py
 
-from api import db  # Import the 'db' object from your main api.py
+from extensions import db, bcrypt, login_manager
+from flask_login import UserMixin
 from datetime import datetime
 
 
 # Helper method to convert model instances to dictionaries
 def to_dict(self):
-    return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    # We generally EXCLUDE the password hash from the dictionary we send to the frontend!
+    data = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    if 'password_hash' in data:
+        del data['password_hash']
+    return data
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
     date_account_created = db.Column(db.DateTime, default=datetime.utcnow)
-    image_link = db.Column(db.String(200), nullable=True)  # Your requested field
+    image_link = db.Column(db.String(200), nullable=True)
 
-    # Relationships: A user can have many transactions, ratings, and comments
+    # Relationships
     transactions = db.relationship('Transaction', backref='user', lazy=True)
     ratings = db.relationship('Rating', backref='user', lazy=True)
     comments = db.relationship('Comment', backref='user', lazy=True)
 
-    to_dict = to_dict  # Assign helper method
+    # Password Management
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+
+    @password.setter
+    def password(self, password):
+        # Hashes the password when you set user.password = "something"
+        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def verify_password(self, password):
+        return bcrypt.check_password_hash(self.password_hash, password)
+
+    to_dict = to_dict
 
 
 class Movie(db.Model):

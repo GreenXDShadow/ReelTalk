@@ -1,40 +1,54 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { createUser } from "../apiService"; // Import directly
+import { useAuth } from "../context/AuthContext";
 import "../css/UserForm.css";
 
 function UserForm({ onSuccess }) {
-  const [formData, setFormData] = useState({ //form to submit 
+  const { login } = useAuth();
+  const [isLogin, setIsLogin] = useState(false); // Toggle between Login/Signup
+
+  const [formData, setFormData] = useState({
     username: "",
-    date_account_created: "",
+    password: "", // Added password
     image_link: "",
   });
 
   const handleChange = (e) => {
-    const { name, value } = e.target; //name is the what was changed, value is what it was changed to
-    setFormData((prev) => ({ ...prev, [name]: value })); //update form
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => { //onsubmit
-    
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const api = await import("../apiService"); //get the api
-      await api.createUser(formData); // call createuser function in api.py
-      onSuccess();  //if it works
-      setFormData({ //then reset form
-        username: "",
-        date_account_created: "",
-        image_link: "",
-      });
+      if (isLogin) {
+        // Handle Login
+        const result = await login(formData.username, formData.password);
+        if (result.success) {
+           alert("Logged in!");
+           setFormData({ username: "", password: "", image_link: "" });
+        } else {
+           alert("Login failed");
+        }
+      } else {
+        // Handle Signup
+        await createUser(formData);
+        onSuccess && onSuccess(); // Refresh user list if provided
+        alert("Account created! Please log in.");
+        setIsLogin(true); // Switch to login view
+      }
     } catch (error) {
-      console.error("Failed to save user:", error); //else smth happened LOL
+      console.error("Operation failed:", error);
+      alert("Error: " + error.message);
     }
   };
 
   return (
     <div className="SignUpForm">
       <form onSubmit={handleSubmit}>
-        <h2>Sign up today!</h2>
+        <h2>{isLogin ? "Login" : "Sign up today!"}</h2>
+
         <input
           type="text"
           name="username"
@@ -44,27 +58,35 @@ function UserForm({ onSuccess }) {
           required
           className="SignUpFormInput"
         />
-        <br/>
+
         <input
-          type="date"
-          name="date_account_created"
-          value={formData.date_account_created}
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={formData.password}
           onChange={handleChange}
           required
           className="SignUpFormInput"
         />
-        <br/>
-        <input
-          type="text"
-          name="image_link"
-          placeholder="Upload image"
-          value={formData.image_link}
-          onChange={handleChange}
-          required
-          className="SignUpFormInput"
-        />
-        <br/>
-        <button type="submit">create</button>
+
+        {/* Hide Image Link during Login */}
+        {!isLogin && (
+          <input
+            type="text"
+            name="image_link"
+            placeholder="Image URL (Optional)"
+            value={formData.image_link}
+            onChange={handleChange}
+            className="SignUpFormInput"
+          />
+        )}
+
+        <button type="submit">{isLogin ? "Login" : "Create Account"}</button>
+
+        <p style={{textAlign: "center", color: "white", marginTop: "10px", cursor: "pointer"}}
+           onClick={() => setIsLogin(!isLogin)}>
+           {isLogin ? "Need an account? Sign up" : "Already have an account? Login"}
+        </p>
       </form>
     </div>
   );
