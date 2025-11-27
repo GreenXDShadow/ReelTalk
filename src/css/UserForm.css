@@ -1,0 +1,44 @@
+.SignUpForm {
+    width: fit-content;
+    max-width: 400px; /* Set a reasonable max width */
+    height: auto; /* Auto height based on content */
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 25px;
+    border: 1px solid white;
+    background-color: rgb(41, 39, 37);
+    padding: 0; /* Remove default padding */
+}
+
+.SignUpForm form {
+    margin-bottom: 20px;
+    padding: 12.5%; /* 12.5% padding on all sides */
+    width: 1000px;
+    box-sizing: border-box;
+}
+
+.SignUpForm h2 {
+    text-align: center;
+    margin-top: 0;
+}
+
+.SignUpFormInput {
+    width: 100%; /* Full width of the form */
+    max-width: 200px; /* Reasonable max width */
+    margin: 0 auto 10px; /* Center horizontally with bottom spacing */
+    display: block; /* Changed from flex to block for proper sizing */
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid white;
+    box-sizing: border-box;
+}
+
+.SignUpForm button {
+    display: block;
+    margin: 10px auto 0;
+    padding: 8px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}

@@ -1,0 +1,43 @@
+/* Reset body margins to prevent left padding */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+ overflow-y: hidden;
+}
+
+
+.background-container {
+  min-height: 100vh;
+  min-width: 100vw;
+  left: 20vw;
+  top: 0;
+  background-image: url('https://static.vecteezy.com/system/resources/previews/023/341/569/non_2x/film-reel-on-the-bright-orange-background-vector.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: sticky;
+  z-index: -1000;
+  margin-top: -75vh;
+}
+
+
+.home-title {
+  text-align: center;
+}
+
+.home-subtitle {
+  text-align: center;
+}
+
+
+.button-container {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+
+.spacer {
+  height: 300px;
+}
