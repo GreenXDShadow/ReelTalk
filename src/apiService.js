@@ -52,8 +52,6 @@ export const getMovieById = async (id) => {
   return response.json();
 };
 
-
-
 // [CREATE] Add a new movie
 export const createMovie = async (movieData) => {
   const response = await fetch(`${BASE_URL}/movies`, {
@@ -196,5 +194,69 @@ export const deleteComment = async (id) => {
     throw new Error('Failed to delete comment');
   }
 
+  return response.json();
+};
+
+//create/read/update/delete for transactions// 
+
+export const getTransactions = async () => {
+  const response = await fetch(`${BASE_URL}/transactions`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch transactions');
+  }
+  return response.json();
+};
+
+export const getTransactionById = async (id) => {
+  const response = await fetch(`${BASE_URL}/transactions/${id}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch transaction with id ${id}`);
+  }
+  return response.json();
+};
+
+export const getTransactionsByUserId = async (userId) => {
+  const response = await fetch(`${BASE_URL}/transactions/user/${userId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch transactions for user ${userId}`);
+  }
+  return response.json();
+};
+
+export const createTransaction = async (transactionData) => {
+  const response = await fetch(`${BASE_URL}/transactions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(transactionData),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create transaction');
+  }
+  return response.json();
+};
+
+export const updateTransaction = async (id, transactionData) => {
+  const response = await fetch(`${BASE_URL}/transactions/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(transactionData),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update transaction');
+  }
+  return response.json();
+};
+
+export const deleteTransaction = async (id) => {
+  const response = await fetch(`${BASE_URL}/transactions/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    throw new Error('Failed to delete transaction');
+  }
   return response.json();
 };
