@@ -274,7 +274,6 @@ def add_comment():
     db.session.commit()
     return jsonify(new_comment.to_dict()), 201
 
-
 # [READ] Get all comments
 @app.route('/api/comments', methods=['GET'])
 def get_comments():
@@ -317,6 +316,75 @@ def delete_comment(id):
     db.session.delete(comment)
     db.session.commit()
     return jsonify({'message': 'Comment deleted successfully'}), 200
+
+
+
+# --- Transaction CRUD Endpoints ---
+
+# [CREATE] Add a new transaction
+@app.route('/api/transactions', methods=['POST'])
+def add_transaction():
+    data = request.get_json()
+    
+    if not data.get('movie_id')  or not data.get('transaction_type') :
+        return jsonify({"error": "movie_id, user_id, & transaction_type are required"}), 400
+
+    new_transaction = Transaction(
+        movie_id=data['movie_id'],
+        user_id=data.get('user_id'),
+        date_start=datetime.strptime(data['date_start'], '%Y-%m-%d %H:%M:%S') if data.get('date_start') else datetime.utcnow(),
+        transaction_type=data['transaction_type']
+    )
+    db.session.add(new_transaction)
+    db.session.commit()
+    return jsonify(new_transaction.to_dict()), 201
+
+# [READ] Get all transactions
+@app.route('/api/transactions', methods=['GET'])
+def get_transactions():
+    transactions = Transaction.query.all()
+    return jsonify([transaction.to_dict() for transaction in transactions])
+
+# [READ] Get a single transaction by ID
+@app.route('/api/transactions/<int:id>', methods=['GET'])
+def get_transaction(id):
+    transaction = Transaction.query.get_or_404(id)
+    return jsonify(transaction.to_dict())
+
+# [READ] Get all transactions for a specific user
+@app.route('/api/transactions/user/<int:user_id>', methods=['GET'])
+def get_transactions_by_user(user_id):
+    transactions = Transaction.query.filter_by(user_id=user_id).all()
+    return jsonify([t.to_dict() for t in transactions]), 200
+
+# [UPDATE] Update an existing transaction
+@app.route('/api/transactions/<int:id>', methods=['PUT'])
+def update_transaction(id):
+    transaction = Transaction.query.get_or_404(id)
+    data = request.get_json()
+
+    if 'movie_id' in data:
+        transaction.movie_id = data['movie_id']
+    if 'user_id' in data:
+        transaction.user_id = data['user_id']
+    if 'date_start' in data:
+        try:
+            transaction.date_start = datetime.strptime(data['date_start'], '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD HH:MM:SS"}), 400
+    if 'transaction_type' in data:
+        transaction.transaction_type = data['transaction_type']
+
+    db.session.commit()
+    return jsonify(transaction.to_dict())
+
+# [DELETE] Delete a transaction
+@app.route('/api/transactions/<int:id>', methods=['DELETE'])
+def delete_transaction(id):
+    transaction = Transaction.query.get_or_404(id)
+    db.session.delete(transaction)
+    db.session.commit()
+    return jsonify({'message': 'Transaction deleted successfully'}), 200
 
 
 
