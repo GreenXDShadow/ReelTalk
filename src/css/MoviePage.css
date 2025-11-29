@@ -1,12 +1,117 @@
 .movieContainer {
   display: flex;
-  justify-content: center;
+  flex-direction: column; /* Changed to column to stack main info and comments */
   align-items: center;
-  height: 100vh;
   width: 100vw;
+  min-height: 100vh;
+  padding-top: 80px; /* Space for fixed navbar */
+  padding-bottom: 50px;
+}
+
+.movieContent {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Top align */
+  width: 100%;
+  max-width: 1200px;
+  gap: 40px;
+  flex-wrap: wrap;
 }
 
 .movieDiv {
   margin: 10px;
   text-align: center;
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Comments Section Styles */
+.comments-section {
+  width: 100%;
+  max-width: 800px;
+  margin-top: 40px;
+  padding: 20px;
+  background-color: #242424;
+  border-top: 1px solid #444;
+}
+
+.comment-card {
+  display: flex;
+  gap: 15px;
+  background-color: #333;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #444;
+}
+
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #646cff;
+}
+
+.comment-body {
+  flex: 1;
+  text-align: left;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+.comment-author {
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.comment-text {
+  margin: 5px 0;
+  color: #ddd;
+  white-space: pre-wrap;
+}
+
+.comment-actions {
+  margin-top: 10px;
+}
+
+.comment-actions button {
+  padding: 5px 10px;
+  font-size: 0.8em;
+  margin-right: 10px;
+}
+
+.add-comment-form {
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.add-comment-form textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #1a1a1a;
+  border: 1px solid #555;
+  color: white;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.edit-textarea {
+  width: 100%;
+  background-color: #222;
+  color: white;
+  border: 1px solid #555;
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 10px;
 }
