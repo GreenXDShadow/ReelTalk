@@ -5,7 +5,10 @@ import {
   getCommentsByMovieId,
   createComment,
   deleteComment,
-  updateComment
+  updateComment,
+  getMovieRating,
+  getUserRating,
+  setRating
 } from "../apiService";
 import { useAuth } from "../context/AuthContext";
 import NavBar from "../components/Navbar";
@@ -24,10 +27,25 @@ export default function MoviePage() {
   const [editingText, setEditingText] = useState("");
   const [error, setError] = useState("");
 
+  // Rating State
+  const [avgRating, setAvgRating] = useState(0);
+  const [ratingCount, setRatingCount] = useState(0);
+  const [userRating, setUserRating] = useState(0);
+
   useEffect(() => {
     fetchMovie();
     fetchComments();
+    fetchRatings();
   }, [id]);
+
+  // Fetch user specific rating when user changes or loads
+  useEffect(() => {
+    if (user && user.id) {
+      fetchUserRating();
+    } else {
+      setUserRating(0); // Reset if logged out
+    }
+  }, [user, id]);
 
   const fetchMovie = async () => {
     try {
@@ -44,6 +62,44 @@ export default function MoviePage() {
       setComments(data);
     } catch (err) {
       console.error("Failed to load comments", err);
+    }
+  };
+
+  const fetchRatings = async () => {
+    try {
+      const data = await getMovieRating(id);
+      setAvgRating(data.average);
+      setRatingCount(data.count);
+    } catch (err) {
+      console.error("Failed to fetch ratings", err);
+    }
+  };
+
+  const fetchUserRating = async () => {
+    try {
+      const data = await getUserRating(id, user.id);
+      setUserRating(data.rating);
+    } catch (err) {
+      console.error("Failed to fetch user rating", err);
+    }
+  };
+
+  // --- Rating Handlers ---
+  const handleRate = async (score) => {
+    if (!user) return; // Should be handled by UI visibility, but safety check
+
+    try {
+      await setRating({
+        movie_id: id,
+        user_id: user.id,
+        rating_score: score
+      });
+
+      // Refresh data
+      fetchUserRating();
+      fetchRatings();
+    } catch (err) {
+      alert("Failed to submit rating: " + err.message);
     }
   };
 
@@ -99,6 +155,23 @@ export default function MoviePage() {
     }
   };
 
+  // Helper component for Stars
+  const StarDisplay = ({ rating, interactive = false, onRate }) => {
+    return (
+      <div className="star-container">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span
+            key={star}
+            className={`star ${star <= rating ? "filled" : ""} ${interactive ? "interactive" : ""}`}
+            onClick={() => interactive && onRate(star)}
+          >
+            ★
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   if (error) return <p>Error: {error}</p>;
   if (!movie) return <p>Loading...</p>;
 
@@ -123,6 +196,23 @@ export default function MoviePage() {
             {movie.description}
           </p>
           <p><strong>Released:</strong> {movie.release_date}</p>
+
+          {/* --- Rating Section --- */}
+          <div className="rating-section">
+            <div className="rating-display">
+              <strong>Average Rating:</strong>
+              <StarDisplay rating={Math.round(avgRating)} />
+              <span>({avgRating} / 5 based on {ratingCount} votes)</span>
+            </div>
+
+            {user && (
+              <div className="user-rating-control">
+                <span>Your Rating:</span>
+                <StarDisplay rating={userRating} interactive={true} onRate={handleRate} />
+              </div>
+            )}
+          </div>
+
           <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
             <TransactionAddButton movieId={movie.id} transactionType="rent"/>
             <TransactionAddButton movieId={movie.id} transactionType="buy"/>

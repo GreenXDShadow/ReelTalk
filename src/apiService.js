@@ -268,3 +268,35 @@ export const deleteTransaction = async (id) => {
   }
   return response.json();
 };
+
+// --- Ratings ---
+
+export const getMovieRating = async (movieId) => {
+  const response = await fetch(`${BASE_URL}/ratings/movie/${movieId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch movie rating');
+  }
+  return response.json();
+};
+
+export const getUserRating = async (movieId, userId) => {
+  const response = await fetch(`${BASE_URL}/ratings/user/${movieId}/${userId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch user rating');
+  }
+  return response.json();
+};
+
+export const setRating = async (ratingData) => {
+  const response = await fetch(`${BASE_URL}/ratings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(ratingData),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to set rating');
+  }
+  return response.json();
+};

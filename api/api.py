@@ -403,6 +403,53 @@ def delete_transaction(id):
     return jsonify({'message': 'Transaction deleted successfully'}), 200
 
 
+# --- Rating CRUD Endpoints ---
+
+# [GET] Get average rating for a movie
+@app.route('/api/ratings/movie/<int:movie_id>', methods=['GET'])
+def get_movie_rating(movie_id):
+    ratings = Rating.query.filter_by(movie_id=movie_id).all()
+    if not ratings:
+        return jsonify({'average': 0, 'count': 0})
+
+    # Calculate average
+    avg = sum(r.rating_score for r in ratings) / len(ratings)
+    return jsonify({'average': round(avg, 1), 'count': len(ratings)})
+
+
+# [GET] Get a specific user's rating for a movie
+@app.route('/api/ratings/user/<int:movie_id>/<int:user_id>', methods=['GET'])
+def get_user_rating(movie_id, user_id):
+    rating = Rating.query.filter_by(movie_id=movie_id, user_id=user_id).first()
+    if rating:
+        return jsonify({'rating': rating.rating_score})
+    return jsonify({'rating': 0})
+
+
+# [POST] Create or Update a rating
+@app.route('/api/ratings', methods=['POST'])
+def set_rating():
+    data = request.get_json()
+    movie_id = data.get('movie_id')
+    user_id = data.get('user_id')
+    score = data.get('rating_score')
+
+    if not all([movie_id, user_id, score]):
+        return jsonify({'error': 'Missing data'}), 400
+
+    # Check for existing rating to update (Upsert)
+    rating = Rating.query.filter_by(movie_id=movie_id, user_id=user_id).first()
+
+    if rating:
+        rating.rating_score = score
+        rating.date_posted = datetime.utcnow()
+    else:
+        rating = Rating(movie_id=movie_id, user_id=user_id, rating_score=score)
+        db.session.add(rating)
+
+    db.session.commit()
+    return jsonify(rating.to_dict()), 201
+
 # Helper
 # This command is needed to run 'flask db' commands
 @app.shell_context_processor
