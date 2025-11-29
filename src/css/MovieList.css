@@ -1,0 +1,31 @@
+/* Borrowed Star UI from MoviePage */
+.star-container {
+  display: flex;
+  gap: 2px;
+}
+
+.star {
+  font-size: 1.2rem; /* Slightly smaller than MoviePage's 1.5rem for the list view */
+  color: #555;
+  transition: color 0.2s;
+}
+
+.star.filled {
+  color: #FFD700; /* Gold */
+}
+
+/* Specific to MovieList */
+.movie-stats-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 5px;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.comment-count {
+    margin-top: 2px;
+    font-size: 0.8rem;
+    color: #888;
+}

@@ -139,8 +139,26 @@ def add_movie():
 # [READ] Get all movies
 @app.route('/api/movies', methods=['GET'])
 def get_movies():
-    movies = Movie.query.all() 
-    return jsonify([movie.to_dict() for movie in movies])
+    movies = Movie.query.all()
+    results = []
+
+    for movie in movies:
+        data = movie.to_dict()
+
+        # Calculate Average Rating
+        ratings = movie.ratings  # Access the relationship
+        if ratings:
+            avg = sum(r.rating_score for r in ratings) / len(ratings)
+            data['average_rating'] = round(avg, 1)
+        else:
+            data['average_rating'] = 0
+
+        # Calculate Comment Count
+        data['comment_count'] = len(movie.comments)  # Access the relationship
+
+        results.append(data)
+
+    return jsonify(results)
 
 
 # [READ] Get a single movie by ID
