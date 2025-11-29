@@ -115,3 +115,55 @@
   border-radius: 4px;
   margin-bottom: 10px;
 }
+
+/* Rating Styles */
+.rating-section {
+  width: 100%;
+  text-align: left;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #444;
+}
+
+.rating-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.star-container {
+  display: flex;
+  gap: 2px;
+}
+
+.star {
+  font-size: 1.5rem;
+  color: #555; /* Empty star color */
+  transition: color 0.2s;
+}
+
+.star.filled {
+  color: #FFD700; /* Gold */
+}
+
+.star.interactive {
+  cursor: pointer;
+}
+
+.star.interactive:hover {
+  transform: scale(1.1);
+}
+
+.user-rating-control {
+  background-color: #333;
+  padding: 10px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+.user-rating-control span {
+  margin-right: 10px;
+  font-weight: bold;
+}
