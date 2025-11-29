@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { getMovies, deleteMovie } from '../apiService';
 import MovieForm from './MovieForm';
 import { useNavigate } from "react-router-dom";
+import "../css/MovieList.css"; // Import the new CSS
 
 function MovieList() {
   const [movies, setMovies] = useState([]);
@@ -17,6 +18,7 @@ function MovieList() {
   const fetchMovies = async () => {
     try {
       const data = await getMovies();
+      // data now includes 'average_rating' and 'comment_count' from the updated API
       setMovies(data);
       setError('');
     } catch (err) {
@@ -46,6 +48,22 @@ function MovieList() {
 
   const navigate = useNavigate();
 
+  // Helper component for Stars (borrowed logic)
+  const StarDisplay = ({ rating }) => {
+    return (
+      <div className="star-container">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span
+            key={star}
+            className={`star ${star <= Math.round(rating) ? "filled" : ""}`}
+          >
+            ★
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div>
       <h2>Movie Management</h2>
@@ -62,7 +80,22 @@ function MovieList() {
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {movies.map((movie) => (
           <li key={movie.id} style={{ border: '1px solid #ccc', margin: '10px', padding: '10px' }}>
-            <img src={movie.image_link || 'https://via.placeholder.com/100x150'} alt={movie.title} style={{width: '100px', float: 'left', marginRight: '10px'}} />
+            <div style={{width: '100px', float: 'left', marginRight: '10px'}}>
+              <img
+                src={movie.image_link || 'https://via.placeholder.com/100x150'}
+                alt={movie.title}
+                style={{width: '100px', display: 'block'}}
+              />
+
+              {/* New Stats Section */}
+              <div className="movie-stats-container">
+                 <StarDisplay rating={movie.average_rating || 0} />
+                 <span className="comment-count">
+                    {movie.comment_count} {movie.comment_count === 1 ? 'comment' : 'comments'}
+                 </span>
+              </div>
+            </div>
+
             <div style={{minWidth: "200px"}}>
               <h4>{movie.title}</h4>
               <p>{movie.description}</p>
