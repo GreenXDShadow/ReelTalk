@@ -148,11 +148,19 @@ export const deleteUser = async(id) => {
 }
 
 //create/read/update/delete for comments
-
 export const getComments = async () => {
   const response = await fetch(`${BASE_URL}/comments`);
   if (!response.ok) {
     throw new Error('Failed to fetch comments');
+  }
+  return response.json();
+};
+
+// Get comments for specific movie
+export const getCommentsByMovieId = async (movieId) => {
+  const response = await fetch(`${BASE_URL}/comments/movie/${movieId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch comments for movie ${movieId}`);
   }
   return response.json();
 };
@@ -197,7 +205,7 @@ export const deleteComment = async (id) => {
   return response.json();
 };
 
-//create/read/update/delete for transactions// 
+//create/read/update/delete for transactions//
 
 export const getTransactions = async () => {
   const response = await fetch(`${BASE_URL}/transactions`);

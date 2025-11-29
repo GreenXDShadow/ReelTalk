@@ -149,11 +149,11 @@ def get_movie(id):
     movie = Movie.query.get_or_404(id)
     return jsonify(movie.to_dict())
 
-# [READ] Select movie IDs and titles 
+# [READ] Select movie IDs and titles
 @app.route('/api/movies/minimal', methods=['GET'])
 def get_movie_minimal():
     movies = Movie.query.with_entities(Movie.id, Movie.title).all()
-    
+
     movie_list = [{"id": m.id, "title": m.title} for m in movies]
     return jsonify(movie_list)
 
@@ -260,7 +260,7 @@ def delete_user(id):
 @app.route('/api/comments', methods=['POST'])
 def add_comment():
     data = request.get_json()
-    
+
     if not data.get('movie_id') or not data.get('user_id') or not data.get('comment_content'):
         return jsonify({"error": "movie_id, user_id, & comment_content are required"}), 400
 
@@ -268,17 +268,35 @@ def add_comment():
         movie_id=data['movie_id'],
         user_id=data['user_id'],
         comment_content=data['comment_content'],
-        date_created=datetime.strptime(data['date_created'], '%Y-%m-%d %H:%M:%S') if data.get('date_created') else datetime.utcnow()
+        date_created=datetime.strptime(data['date_created'], '%Y-%m-%d %H:%M:%S') if data.get(
+            'date_created') else datetime.utcnow()
     )
     db.session.add(new_comment)
     db.session.commit()
     return jsonify(new_comment.to_dict()), 201
+
 
 # [READ] Get all comments
 @app.route('/api/comments', methods=['GET'])
 def get_comments():
     comments = Comment.query.all()
     return jsonify([comment.to_dict() for comment in comments])
+
+
+# [READ] Get comments for a specific movie
+@app.route('/api/comments/movie/<int:movie_id>', methods=['GET'])
+def get_comments_by_movie(movie_id):
+    # Retrieve comments filtered by movie_id
+    comments = Comment.query.filter_by(movie_id=movie_id).order_by(Comment.date_created.desc()).all()
+    results = []
+    for comment in comments:
+        data = comment.to_dict()
+        # Manually attach user info from the relationship
+        if comment.user:
+            data['username'] = comment.user.username
+            data['user_image'] = comment.user.image_link
+        results.append(data)
+    return jsonify(results)
 
 
 # [READ] Get a single comment by ID
@@ -317,22 +335,20 @@ def delete_comment(id):
     db.session.commit()
     return jsonify({'message': 'Comment deleted successfully'}), 200
 
-
-
 # --- Transaction CRUD Endpoints ---
-
 # [CREATE] Add a new transaction
 @app.route('/api/transactions', methods=['POST'])
 def add_transaction():
     data = request.get_json()
-    
-    if not data.get('movie_id')  or not data.get('transaction_type') :
+
+    if not data.get('movie_id') or not data.get('transaction_type'):
         return jsonify({"error": "movie_id, user_id, & transaction_type are required"}), 400
 
     new_transaction = Transaction(
         movie_id=data['movie_id'],
         user_id=data.get('user_id'),
-        date_start=datetime.strptime(data['date_start'], '%Y-%m-%d %H:%M:%S') if data.get('date_start') else datetime.utcnow(),
+        date_start=datetime.strptime(data['date_start'], '%Y-%m-%d %H:%M:%S') if data.get(
+            'date_start') else datetime.utcnow(),
         transaction_type=data['transaction_type']
     )
     db.session.add(new_transaction)
@@ -385,7 +401,6 @@ def delete_transaction(id):
     db.session.delete(transaction)
     db.session.commit()
     return jsonify({'message': 'Transaction deleted successfully'}), 200
-
 
 
 # Helper
