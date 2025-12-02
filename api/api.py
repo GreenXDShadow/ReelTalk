@@ -1,5 +1,6 @@
 # api/api.py
 
+from functools import wraps
 import time
 import click
 from flask import Flask, request, jsonify
@@ -10,6 +11,26 @@ from datetime import datetime
 from extensions import db, bcrypt, login_manager
 from models import User, Movie, Transaction, Rating, Comment
 import os
+
+
+# Helper: Check if user has a transaction for a movie
+def user_has_transaction(user_id, movie_id):
+    'Returns True if the user has rented or purchased the movie.'
+    return Transaction.query.filter_by(
+        user_id=user_id,
+        movie_id=movie_id
+    ).first() is not None
+
+
+# Simple Admin Check Functions
+def is_admin():
+    # Must be logged in AND have is_admin = True
+    return current_user.is_authenticated and getattr(current_user, 'is_admin', False)
+
+
+def admin_only():
+    return jsonify({'error': 'Admin access required'}), 403
+
 
 app = Flask(__name__)
 # IMPORTANT: Set a secret key for session management!
@@ -32,9 +53,9 @@ migrate = Migrate(app, db)
 
 # --- CLI COMMANDS (Administrative Way to Create/Delete Users) ---
 
-@app.cli.command("create-user")
-@click.argument("username")
-@click.argument("password")
+@app.cli.command('create-user')
+@click.argument('username')
+@click.argument('password')
 def create_user(username, password):
     """Create a new user: flask create-user <username> <password>"""
     if User.query.filter_by(username=username).first():
@@ -48,10 +69,10 @@ def create_user(username, password):
     print(f"User '{username}' created successfully.")
 
 
-@app.cli.command("delete-user")
-@click.argument("username")
+@app.cli.command('delete-user')
+@click.argument('username')
 def delete_user(username):
-    """Delete a user: flask delete-user <username>"""
+    'Delete a user: flask delete-user <username>'
     user = User.query.filter_by(username=username).first()
     if not user:
         print(f"Error: User '{username}' not found.")
@@ -74,27 +95,17 @@ def login():
 
     if user and user.verify_password(password):
         login_user(user)
-        return jsonify({"message": "Logged in successfully", "user": user.to_dict()}), 200
+        return jsonify({'message': 'Logged in successfully', 'user': user.to_dict()}), 200
 
-    return jsonify({"error": "Invalid username or password"}), 401
+    return jsonify({'error': 'Invalid username or password'}), 401
 
 
 @app.route('/api/logout', methods=['POST'])
 @login_required
 def logout():
     logout_user()
-    return jsonify({"message": "Logged out successfully"}), 200
+    return jsonify({'message': 'Logged out successfully'}), 200
 
-# Example of how to protect a route if we want to restrict pages to only logged in users
-# @app.route('/api/protected-route')
-# @login_required
-# def protected():
-#     return jsonify({"secret": "data"})
-
-# --- Existing Routes ---
-# (Keep your existing movie/transaction routes here,
-#  but make sure to remove the old '/api/users' Create route
-#  or update it to handle passwords if you want public signups)
 
 # --- API Routes ---
 
@@ -109,6 +120,9 @@ def get_current_time():
 # [CREATE] Add a new movie
 @app.route('/api/movies', methods=['POST'])
 def add_movie():
+    if not is_admin():
+        return admin_only()
+
     data = request.get_json()
 
     release_date_str = data.get('releaseDate')
@@ -121,7 +135,7 @@ def add_movie():
             release_date_obj = datetime.strptime(release_date_str, '%Y-%m-%d').date()
         except ValueError:
             # Handle invalid date format if necessary
-            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
 
     new_movie = Movie(
         title=data['title'],
@@ -146,15 +160,26 @@ def get_movies():
         data = movie.to_dict()
 
         # Calculate Average Rating
-        ratings = movie.ratings  # Access the relationship
+        ratings = movie.ratings
         if ratings:
             avg = sum(r.rating_score for r in ratings) / len(ratings)
             data['average_rating'] = round(avg, 1)
         else:
             data['average_rating'] = 0
 
-        # Calculate Comment Count
-        data['comment_count'] = len(movie.comments)  # Access the relationship
+        # Comment count
+        data['comment_count'] = len(movie.comments)
+
+        # short preview of the most recent 2 comments
+        sorted_comments = sorted(movie.comments, key=lambda c: c.date_created, reverse=True)[:2]
+        data['comment_preview'] = [
+            {
+                'username': c.user.username if c.user else None,
+                'comment_content': c.comment_content,
+                'date_created': c.date_created.isoformat() if c.date_created else None,
+            }
+            for c in sorted_comments
+        ]
 
         results.append(data)
 
@@ -167,18 +192,21 @@ def get_movie(id):
     movie = Movie.query.get_or_404(id)
     return jsonify(movie.to_dict())
 
+
 # [READ] Select movie IDs and titles
 @app.route('/api/movies/minimal', methods=['GET'])
 def get_movie_minimal():
     movies = Movie.query.with_entities(Movie.id, Movie.title).all()
-
-    movie_list = [{"id": m.id, "title": m.title} for m in movies]
+    movie_list = [{'id': m.id, 'title': m.title} for m in movies]
     return jsonify(movie_list)
 
 
 # [UPDATE] Update an existing movie
 @app.route('/api/movies/<int:id>', methods=['PUT'])
 def update_movie(id):
+    if not is_admin():
+        return admin_only()
+
     movie = Movie.query.get_or_404(id)
     data = request.get_json()
 
@@ -187,7 +215,7 @@ def update_movie(id):
         try:
             movie.release_date = datetime.strptime(release_date_str, '%Y-%m-%d').date()
         except ValueError:
-            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
     elif 'releaseDate' in data:  # Handle case where date is intentionally set to null
         movie.release_date = None
 
@@ -204,30 +232,30 @@ def update_movie(id):
 # [DELETE] Delete a movie
 @app.route('/api/movies/<int:id>', methods=['DELETE'])
 def delete_movie(id):
+    if not is_admin():
+        return admin_only()
+
     movie = Movie.query.get_or_404(id)
     db.session.delete(movie)
     db.session.commit()
     return jsonify({'message': 'Movie deleted successfully'}), 200
 
 
-# Note: You would continue this pattern to create CRUD endpoints for Users, Comments, Ratings, and Transactions.
-
 # --- User CRUD Endpoints ---
 
-# [CREATE] Add a new user
-# Updated User Create Route (Public Signup)
+# [CREATE] Add a new user (Public Signup)
 @app.route('/api/users', methods=['POST'])
 def add_user():
     data = request.get_json()
     if not data.get('username') or not data.get('password'):
-        return jsonify({"error": "Username and password required"}), 400
+        return jsonify({'error': 'Username and password required'}), 400
 
     if User.query.filter_by(username=data['username']).first():
-        return jsonify({"error": "Username already exists"}), 400
+        return jsonify({'error': 'Username already exists'}), 400
 
     new_user = User(
         username=data['username'],
-        password=data['password'], # This triggers the hashing
+        password=data['password'],  # This triggers the hashing
         image_link=data.get('image_link'),
         date_account_created=datetime.utcnow()
     )
@@ -236,16 +264,22 @@ def add_user():
     return jsonify(new_user.to_dict()), 201
 
 
-# [READ] Get all users
+# [READ] Get all users (Admin only)
 @app.route('/api/users', methods=['GET'])
 def get_users():
+    if not is_admin():
+        return admin_only()
+
     users = User.query.all()
     return jsonify([user.to_dict() for user in users])
 
 
-# [UPDATE] Update an existing user
+# [UPDATE] Update an existing user (Admin only)
 @app.route('/api/users/<int:id>', methods=['PUT'])
 def update_user(id):
+    if not is_admin():
+        return admin_only()
+
     user = User.query.get_or_404(id)
     data = request.get_json()
 
@@ -257,15 +291,18 @@ def update_user(id):
         try:
             user.date_account_created = datetime.strptime(data['date_account_created'], '%Y-%m-%d')
         except ValueError:
-            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
 
     db.session.commit()
     return jsonify(user.to_dict())
 
 
-# [DELETE] Delete a user
+# [DELETE] Delete a user (Admin only)
 @app.route('/api/users/<int:id>', methods=['DELETE'])
 def delete_user(id):
+    if not is_admin():
+        return admin_only()
+
     user = User.query.get_or_404(id)
     db.session.delete(user)
     db.session.commit()
@@ -279,18 +316,26 @@ def delete_user(id):
 def add_comment():
     data = request.get_json()
 
-    if not data.get('movie_id') or not data.get('user_id') or not data.get('comment_content'):
-        return jsonify({"error": "movie_id, user_id, & comment_content are required"}), 400
+    movie_id = data.get('movie_id')
+    user_id = data.get('user_id')
+    content = data.get('comment_content')
+
+    if not movie_id or not user_id or not content:
+        return jsonify({'error': 'movie_id, user_id, & comment_content are required'}), 400
+
+    # User must have watched (rented or purchased) the movie
+    if not user_has_transaction(user_id, movie_id):
+        return jsonify({'error': 'User has not rented or purchased this movie'}), 403
 
     new_comment = Comment(
-        movie_id=data['movie_id'],
-        user_id=data['user_id'],
-        comment_content=data['comment_content'],
-        date_created=datetime.strptime(data['date_created'], '%Y-%m-%d %H:%M:%S') if data.get(
-            'date_created') else datetime.utcnow()
-    )
-    db.session.add(new_comment)
-    db.session.commit()
+        movie_id=movie_id,
+        user_id=user_id,
+        comment_content=content,
+        date_created=datetime.strptime(
+            data['date_created'],
+            '%Y-%m-%d %H:%M:%S'
+        ) if data.get('date_created') else datetime.utcnow()
+    )    db.session.commit()
     return jsonify(new_comment.to_dict()), 201
 
 
@@ -304,7 +349,6 @@ def get_comments():
 # [READ] Get comments for a specific movie
 @app.route('/api/comments/movie/<int:movie_id>', methods=['GET'])
 def get_comments_by_movie(movie_id):
-    # Retrieve comments filtered by movie_id
     comments = Comment.query.filter_by(movie_id=movie_id).order_by(Comment.date_created.desc()).all()
     results = []
     for comment in comments:
@@ -340,10 +384,11 @@ def update_comment(id):
         try:
             comment.date_created = datetime.strptime(data['date_created'], '%Y-%m-%d %H:%M:%S')
         except ValueError:
-            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD HH:MM:SS"}), 400
+            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD HH:MM:SS'}), 400
 
     db.session.commit()
     return jsonify(comment.to_dict())
+
 
 # [DELETE] Delete a comment
 @app.route('/api/comments/<int:id>', methods=['DELETE'])
@@ -353,25 +398,30 @@ def delete_comment(id):
     db.session.commit()
     return jsonify({'message': 'Comment deleted successfully'}), 200
 
+
 # --- Transaction CRUD Endpoints ---
+
 # [CREATE] Add a new transaction
 @app.route('/api/transactions', methods=['POST'])
 def add_transaction():
     data = request.get_json()
 
-    if not data.get('movie_id') or not data.get('transaction_type'):
-        return jsonify({"error": "movie_id, user_id, & transaction_type are required"}), 400
+    if not data.get('movie_id') or not data.get('user_id') or not data.get('transaction_type'):
+        return jsonify({'error': 'movie_id, user_id, & transaction_type are required'}), 400
 
     new_transaction = Transaction(
         movie_id=data['movie_id'],
-        user_id=data.get('user_id'),
-        date_start=datetime.strptime(data['date_start'], '%Y-%m-%d %H:%M:%S') if data.get(
-            'date_start') else datetime.utcnow(),
+        user_id=data['user_id'],
+        date_start=datetime.strptime(
+            data['date_start'],
+            '%Y-%m-%d %H:%M:%S'
+        ) if data.get('date_start') else datetime.utcnow(),
         transaction_type=data['transaction_type']
     )
     db.session.add(new_transaction)
     db.session.commit()
     return jsonify(new_transaction.to_dict()), 201
+
 
 # [READ] Get all transactions
 @app.route('/api/transactions', methods=['GET'])
@@ -379,17 +429,39 @@ def get_transactions():
     transactions = Transaction.query.all()
     return jsonify([transaction.to_dict() for transaction in transactions])
 
+
 # [READ] Get a single transaction by ID
 @app.route('/api/transactions/<int:id>', methods=['GET'])
 def get_transaction(id):
     transaction = Transaction.query.get_or_404(id)
     return jsonify(transaction.to_dict())
 
-# [READ] Get all transactions for a specific user
-@app.route('/api/transactions/user/<int:user_id>', methods=['GET'])
-def get_transactions_by_user(user_id):
-    transactions = Transaction.query.filter_by(user_id=user_id).all()
-    return jsonify([t.to_dict() for t in transactions]), 200
+
+# [READ] Get richer order history for a user (with movie info)
+@app.route('/api/users/<int:user_id>/history', methods=['GET'])
+def get_user_history(user_id):
+    """Returns a richer order history for a user, including movie title & image."""
+    results = (
+        db.session.query(Transaction, Movie)
+        .join(Movie, Transaction.movie_id == Movie.id)
+        .filter(Transaction.user_id == user_id)
+        .order_by(Transaction.date_start.desc())
+        .all()
+    )
+
+    history = []
+    for transaction, movie in results:
+        history.append({
+            'transaction_id': transaction.id,
+            'movie_id': movie.id,
+            'movie_title': movie.title,
+            'movie_image': movie.image_link,
+            'date_start': transaction.date_start.isoformat() if transaction.date_start else None,
+            'transaction_type': transaction.transaction_type,
+        })
+
+    return jsonify(history), 200
+
 
 # [UPDATE] Update an existing transaction
 @app.route('/api/transactions/<int:id>', methods=['PUT'])
@@ -405,12 +477,13 @@ def update_transaction(id):
         try:
             transaction.date_start = datetime.strptime(data['date_start'], '%Y-%m-%d %H:%M:%S')
         except ValueError:
-            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD HH:MM:SS"}), 400
+            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD HH:MM:SS'}), 400
     if 'transaction_type' in data:
         transaction.transaction_type = data['transaction_type']
 
     db.session.commit()
     return jsonify(transaction.to_dict())
+
 
 # [DELETE] Delete a transaction
 @app.route('/api/transactions/<int:id>', methods=['DELETE'])
@@ -430,7 +503,6 @@ def get_movie_rating(movie_id):
     if not ratings:
         return jsonify({'average': 0, 'count': 0})
 
-    # Calculate average
     avg = sum(r.rating_score for r in ratings) / len(ratings)
     return jsonify({'average': round(avg, 1), 'count': len(ratings)})
 
@@ -448,14 +520,19 @@ def get_user_rating(movie_id, user_id):
 @app.route('/api/ratings', methods=['POST'])
 def set_rating():
     data = request.get_json()
+
     movie_id = data.get('movie_id')
     user_id = data.get('user_id')
     score = data.get('rating_score')
 
-    if not all([movie_id, user_id, score]):
-        return jsonify({'error': 'Missing data'}), 400
+    if movie_id is None or user_id is None or score is None:
+        return jsonify({'error': 'movie_id, user_id, and rating_score are required'}), 400
 
-    # Check for existing rating to update (Upsert)
+    # User must have watched movie
+    if not user_has_transaction(user_id, movie_id):
+        return jsonify({'error': 'User has not rented or purchased this movie'}), 403
+
+    # Upsert: update or create rating
     rating = Rating.query.filter_by(movie_id=movie_id, user_id=user_id).first()
 
     if rating:
@@ -468,8 +545,16 @@ def set_rating():
     db.session.commit()
     return jsonify(rating.to_dict()), 201
 
+
 # Helper
 # This command is needed to run 'flask db' commands
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'User': User, 'Movie': Movie, 'Transaction': Transaction, 'Rating': Rating, 'Comment': Comment}
+    return {
+        'db': db,
+        'User': User,
+        'Movie': Movie,
+        'Transaction': Transaction,
+        'Rating': Rating,
+        'Comment': Comment
+    }
