@@ -327,17 +327,25 @@ def add_comment():
     if not user_has_transaction(user_id, movie_id):
         return jsonify({'error': 'User has not rented or purchased this movie'}), 403
 
+    # Optional date parsing
+    if data.get('date_created'):
+        try:
+            date_created = datetime.strptime(data['date_created'], '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD HH:MM:SS'}), 400
+    else:
+        date_created = datetime.utcnow()
+
     new_comment = Comment(
         movie_id=movie_id,
         user_id=user_id,
         comment_content=content,
-        date_created=datetime.strptime(
-            data['date_created'],
-            '%Y-%m-%d %H:%M:%S'
-        ) if data.get('date_created') else datetime.utcnow()
-    )    db.session.commit()
-    return jsonify(new_comment.to_dict()), 201
+        date_created=date_created
+    )
 
+    db.session.add(new_comment)
+    db.session.commit()
+    return jsonify(new_comment.to_dict()), 201
 
 # [READ] Get all comments
 @app.route('/api/comments', methods=['GET'])

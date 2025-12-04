@@ -1,0 +1,230 @@
+// src/pages/AdminPage.jsx
+
+import React, { useEffect, useState } from "react";
+import {
+  getMovies,
+  createMovie,
+  updateMovie,
+  deleteMovie
+} from "../apiService";
+
+function AdminPage() {
+  const [movies, setMovies] = useState([]);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [formMovie, setFormMovie] = useState({
+    title: "",
+    description: "",
+    rentalPrice: "",
+    purchasePrice: "",
+    imageLink: "",
+    releaseDate: ""
+  });
+
+  useEffect(() => {
+    loadMovies();
+  }, []);
+
+  const loadMovies = async () => {
+    try {
+      setError("");
+      setIsLoading(true);
+      const data = await getMovies();
+      setMovies(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormMovie({
+      ...formMovie,
+      [name]: value
+    });
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setFormMovie({
+      title: "",
+      description: "",
+      rentalPrice: "",
+      purchasePrice: "",
+      imageLink: "",
+      releaseDate: ""
+    });
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const payload = {
+      title: formMovie.title,
+      description: formMovie.description,
+      rentalPrice: Number(formMovie.rentalPrice),
+      purchasePrice: Number(formMovie.purchasePrice),
+      imageLink: formMovie.imageLink,
+      releaseDate: formMovie.releaseDate
+    };
+
+    try {
+      setError("");
+
+      if (editingId) {
+        await updateMovie(editingId, payload);
+      } else {
+        await createMovie(payload);
+      }
+
+      resetForm();
+      loadMovies();
+    } catch (err) {
+      // e.g. "Admin access required" from backend
+      setError(err.message);
+    }
+  };
+
+  const handleEditClick = (movie) => {
+    setEditingId(movie.id);
+
+    setFormMovie({
+      title: movie.title || "",
+      description: movie.description || "",
+      rentalPrice: movie.rental_price || "",
+      purchasePrice: movie.purchase_price || "",
+      imageLink: movie.image_link || "",
+      releaseDate: movie.release_date || ""
+    });
+  };
+
+  const handleDeleteClick = async (id) => {
+    const confirmDelete = window.confirm("Delete this movie?");
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      setError("");
+      await deleteMovie(id);
+      loadMovies();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <div className="admin-page">
+      <h1>Admin Panel</h1>
+
+      {error && (
+        <p style={{ color: "red" }}>
+          {error}
+        </p>
+      )}
+
+      {isLoading && <p>Loading movies...</p>}
+
+      <section>
+        <h2>{editingId ? "Edit Movie" : "Add Movie"}</h2>
+
+        <form onSubmit={handleSubmit}>
+          <div>
+            <input
+              name="title"
+              placeholder="Title"
+              value={formMovie.title}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <input
+              name="description"
+              placeholder="Description"
+              value={formMovie.description}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <input
+              name="rentalPrice"
+              placeholder="Rental Price"
+              value={formMovie.rentalPrice}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <input
+              name="purchasePrice"
+              placeholder="Purchase Price"
+              value={formMovie.purchasePrice}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <input
+              name="imageLink"
+              placeholder="Image URL"
+              value={formMovie.imageLink}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <input
+              type="date"
+              name="releaseDate"
+              value={formMovie.releaseDate}
+              onChange={handleChange}
+            />
+          </div>
+
+          <button type="submit">
+            {editingId ? "Update Movie" : "Add Movie"}
+          </button>
+
+          {editingId && (
+            <button type="button" onClick={resetForm}>
+              Cancel
+            </button>
+          )}
+        </form>
+      </section>
+
+      <section>
+        <h2>Existing Movies</h2>
+
+        {movies.length === 0 && !isLoading && (
+          <p>No movies yet.</p>
+        )}
+
+        {movies.length > 0 && (
+          <ul>
+            {movies.map((movie) => {
+              return (
+                <li key={movie.id}>
+                  {movie.title}{" "}
+                  <button onClick={() => handleEditClick(movie)}>
+                    Edit
+                  </button>{" "}
+                  <button onClick={() => handleDeleteClick(movie.id)}>
+                    Delete
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
+export default AdminPage;

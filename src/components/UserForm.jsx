@@ -9,13 +9,17 @@ function UserForm({ onSuccess }) {
 
   const [formData, setFormData] = useState({
     username: "",
-    password: "", // Added password
+    password: "", 
     image_link: "",
+    is_admin: false,   // NEW: flag for admin accounts
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ 
+      ...prev, 
+      [name]: value 
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -26,14 +30,19 @@ function UserForm({ onSuccess }) {
         // Handle Login
         const result = await login(formData.username, formData.password);
         if (result.success) {
-           alert("Logged in!");
-           setFormData({ username: "", password: "", image_link: "" });
+          alert("Logged in!");
+          setFormData({ 
+            username: "", 
+            password: "", 
+            image_link: "",
+            is_admin: false    // reset admin flag too
+          });
         } else {
-           alert("Login failed");
+          alert("Login failed");
         }
       } else {
         // Handle Signup
-        await createUser(formData);
+        await createUser(formData);  // formData now includes is_admin
         onSuccess && onSuccess(); // Refresh user list if provided
         alert("Account created! Please log in.");
         setIsLogin(true); // Switch to login view
@@ -81,11 +90,37 @@ function UserForm({ onSuccess }) {
           />
         )}
 
-        <button type="submit">{isLogin ? "Login" : "Create Account"}</button>
+        {/* Show Admin checkbox only during Signup */}
+        {!isLogin && (
+          <label style={{ color: "white", display: "block", marginTop: "8px" }}>
+            <input
+              type="checkbox"
+              checked={formData.is_admin}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  is_admin: e.target.checked,
+                }))
+              }
+            />{" "}
+            I am an admin (demo only)
+          </label>
+        )}
 
-        <p style={{textAlign: "center", color: "white", marginTop: "10px", cursor: "pointer"}}
-           onClick={() => setIsLogin(!isLogin)}>
-           {isLogin ? "Need an account? Sign up" : "Already have an account? Login"}
+        <button type="submit">
+          {isLogin ? "Login" : "Create Account"}
+        </button>
+
+        <p
+          style={{
+            textAlign: "center",
+            color: "white",
+            marginTop: "10px",
+            cursor: "pointer",
+          }}
+          onClick={() => setIsLogin(!isLogin)}
+        >
+          {isLogin ? "Need an account? Sign up" : "Already have an account? Login"}
         </p>
       </form>
     </div>

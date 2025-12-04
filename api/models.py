@@ -23,6 +23,7 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(128), nullable=False)
     date_account_created = db.Column(db.DateTime, default=datetime.utcnow)
     image_link = db.Column(db.String(200), nullable=True)
+    is_admin = db.Column(db.Boolean, default=False)
 
     # Relationships
     transactions = db.relationship('Transaction', backref='user', lazy=True)

@@ -1,0 +1,65 @@
+// src/pages/HistoryPage.jsx
+
+import React, { useEffect, useState } from 'react';
+import { getUserHistory } from '../apiService';
+
+function HistoryPage({ currentUser }) {
+  const [history, setHistory] = useState([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (currentUser && currentUser.id) {
+      loadHistory();
+    }
+  }, [currentUser]);
+
+  const loadHistory = async () => {
+    try {
+      setError('');
+      const data = await getUserHistory(currentUser.id);
+      setHistory(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  if (!currentUser) {
+    return <p>You must be logged in to view your history.</p>;
+  }
+
+  return (
+    <div className="history-page">
+      <h1>Your Rental / Purchase History</h1>
+
+      {error && (
+        <p style={{ color: 'red' }}>
+          {error}
+        </p>
+      )}
+
+      {/* If no history */}
+      {history.length === 0 && (
+        <p>You have no transactions yet.</p>
+      )}
+
+      {/* If history exists, list results */}
+      {history.length > 0 && (
+        <ul>
+          {history.map((item) => {
+            return (
+              <li key={item.transaction_id}>
+                <strong>{item.movie_title}</strong> — {item.transaction_type} on{' '}
+                {item.date_start
+                  ? new Date(item.date_start).toLocaleString()
+                  : 'Unknown date'}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+export default HistoryPage;
+

@@ -300,3 +300,16 @@ export const setRating = async (ratingData) => {
   }
   return response.json();
 };
+
+
+
+
+// - Transaction History for a user -
+
+export const getUserHistory = async (userId) => {
+  const response = await fetch(`${BASE_URL}/users/${userId}/history`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch user history');
+  }
+  return response.json();
+};
