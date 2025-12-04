@@ -65,7 +65,11 @@ function MovieList() {
   };
 
   return (
-    <div>
+    <div style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center", 
+          alignItems: "center", }}>
       <h2>Movie Management</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
@@ -96,12 +100,12 @@ function MovieList() {
               </div>
             </div>
 
-            <div style={{minWidth: "200px"}}>
+            <div style={{minWidth: "600px"}}>
               <h4>{movie.title}</h4>
               <p>{movie.description}</p>
               <p><strong>Rent:</strong> ${movie.rental_price} | <strong>Buy:</strong> ${movie.purchase_price}</p>
             </div>
-            <div style={{minWidth: "200px",  display: "flex", justifyContent: "center"}}>
+            <div style={{minWidth: "600px",  display: "flex", justifyContent: "center"}}>
               <button onClick={() => handleEdit(movie)}>Edit</button>
               <button onClick={() => handleDelete(movie.id)} style={{ marginLeft: '10px', marginRight: '10px'}}>Delete</button>
               <button onClick={() => navigate(`/movie/${movie.id}`)}>See Info</button>
