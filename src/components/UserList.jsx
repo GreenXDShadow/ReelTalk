@@ -51,7 +51,11 @@ function UserList() {
 
   return (
     //the actual component
-    <div>
+    <div style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center", 
+          alignItems: "center", }}>
       <h2>User Management</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
 
