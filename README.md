@@ -91,10 +91,13 @@ The backend requires a Python virtual environment and database initialization.
         ```bash
         set FLASK_APP=api/api.py
         flask --app api/api.py db init
+        flask --app api/api.py db migrate
         flask --app api/api.py db upgrade 
         ```
 
     This will execute the migration scripts and generate an `app.db` file within the `api/` directory, populated with the required tables.
+
+    If you want to run the generation script, you can run `python dummydata.py`
 
 -----
 
