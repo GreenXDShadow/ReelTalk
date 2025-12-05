@@ -201,13 +201,20 @@ def update_movie(id):
     return jsonify(movie.to_dict())
 
 
-# [DELETE] Delete a movie
+# [DELETE] Delete a movie and its children
 @app.route('/api/movies/<int:id>', methods=['DELETE'])
 def delete_movie(id):
     movie = Movie.query.get_or_404(id)
+
+    # Delete associated children first
+    Transaction.query.filter_by(movie_id=id).delete()
+    Rating.query.filter_by(movie_id=id).delete()
+    Comment.query.filter_by(movie_id=id).delete()
+
+    # Now delete the movie
     db.session.delete(movie)
     db.session.commit()
-    return jsonify({'message': 'Movie deleted successfully'}), 200
+    return jsonify({'message': 'Movie and associated data deleted successfully'}), 200
 
 
 # Note: You would continue this pattern to create CRUD endpoints for Users, Comments, Ratings, and Transactions.
@@ -263,13 +270,20 @@ def update_user(id):
     return jsonify(user.to_dict())
 
 
-# [DELETE] Delete a user
+# [DELETE] Delete a user and their children
 @app.route('/api/users/<int:id>', methods=['DELETE'])
 def delete_user(id):
     user = User.query.get_or_404(id)
+
+    # Delete associated children first
+    Transaction.query.filter_by(user_id=id).delete()
+    Rating.query.filter_by(user_id=id).delete()
+    Comment.query.filter_by(user_id=id).delete()
+
+    # Now delete the user
     db.session.delete(user)
     db.session.commit()
-    return jsonify({'message': 'User deleted successfully'}), 200
+    return jsonify({'message': 'User and associated data deleted successfully'}), 200
 
 
 # --- Comment CRUD Endpoints ---
