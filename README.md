@@ -24,6 +24,9 @@ Before proceeding, ensure the following software is installed on your system:
 
 ## Installation and Setup
 
+### NOTE: If you just want to open the database, you can open the file app.db using DB Browser for SQLite
+- https://sqlitebrowser.org/
+
 Follow these steps to configure the local environment.
 
 ### 1\. Clone Repository
