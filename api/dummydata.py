@@ -269,7 +269,7 @@ def init_db():
                 rating = Rating(
                     user_id=user.id,
                     movie_id=movie.id,
-                    rating_score=random.randint(3, 5),  # Generally positive reviews
+                    rating_score=random.randint(1, 5),  # Generally positive reviews
                     date_posted=datetime.utcnow() - timedelta(days=random.randint(0, 30))
                 )
                 db.session.add(rating)

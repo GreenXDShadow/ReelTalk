@@ -1,7 +1,7 @@
 import NavBar from "../components/Navbar";
-import UserList from '../components/UserList';
+import EditMovieList from '../components/EditMovieList';
 
-export default function Home() {
+export default function MovieCatalog() {
   return (
     <>
       <NavBar />
@@ -12,11 +12,11 @@ export default function Home() {
           justifyContent: "center", 
           height: "100vh", 
           width: "100vw",  
-          paddingTop: "1400px"
+          paddingTop: "1600px"
         }}
       >
-      <h1>Current Users</h1>
-      <UserList />
+      <h1>Movies Available</h1>
+      <EditMovieList />
       </div>
     </>
   );
