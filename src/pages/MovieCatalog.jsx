@@ -10,10 +10,9 @@ export default function MovieCatalog() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center", 
-          alignItems: "center", 
           height: "100vh", 
           width: "100vw",  
-          paddingTop: "300px"
+          paddingTop: "1600px"
         }}
       >
       <h1>Movies Available</h1>

@@ -70,7 +70,15 @@ function MovieList() {
           flexDirection: "column",
           justifyContent: "center", 
           alignItems: "center", }}>
-      {error && <p style={{ color: 'red' }}>{error}</p>} 
+      <h2>Movie Management</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      {/* Form for Creating or Editing */}
+      <MovieForm
+        key={editingMovie ? editingMovie.id : 'new'} // Re-mounts form when editingMovie changes
+        movie={editingMovie}
+        onSuccess={handleFormSuccess}
+      />
 
       <h3>Available Movies</h3>
       <ul style={{ listStyle: 'none', padding: 0 }}>
@@ -98,6 +106,8 @@ function MovieList() {
               <p><strong>Rent:</strong> ${movie.rental_price} | <strong>Buy:</strong> ${movie.purchase_price}</p>
             </div>
             <div style={{minWidth: "600px",  display: "flex", justifyContent: "center"}}>
+              <button onClick={() => handleEdit(movie)}>Edit</button>
+              <button onClick={() => handleDelete(movie.id)} style={{ marginLeft: '10px', marginRight: '10px'}}>Delete</button>
               <button onClick={() => navigate(`/movie/${movie.id}`)}>See Info</button>
             </div>
           </li>
